@@ -1,11 +1,17 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
-#include "classes/Kismet/BlueprintFunctionLibrary.h"
-#include "ShaderTest.generated.h"
+#include "GlobalShader.h"
+#include "ShaderParameterUtils.h"
+#include "TextureResource.h"
 
-UCLASS(MinimalAPI)
-class UShaderTestBPLib: public UBlueprintFunctionLibrary
+
+class ShaderTest
 {
-	GENERATED_BODY()
+public:
+	static void Draw_RenderThread(
+		FRHICommandListImmediate& RHICmdList,
+		FTextureRenderTargetResource* OutputRenderTargetResource,
+		ERHIFeatureLevel::Type FeatureLevel,
+		FName TextureRenderTargetName,
+		FLinearColor MyColor);
 };

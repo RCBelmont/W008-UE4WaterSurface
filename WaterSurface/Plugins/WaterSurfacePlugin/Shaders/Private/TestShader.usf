@@ -7,12 +7,19 @@ void MainVS(
  )
 {
  // screenspace position from vb
-    OutPosition = InPosition;
+
+ float2 Pos = InPosition.xy;
+
+	Pos.xy = Pos.xy*2 - 1.0f;
+	Pos.xy *= float2(1, -1);
+
+    //OutPosition = float4(Pos, 0, 1);
+	OutPosition = InPosition;
 }
 
 void MainPS(
     out float4 OutColor : SV_Target0
     )
 {
-    OutColor = SimpleColor;
+    OutColor = float4(0,0,1,1);
 }
