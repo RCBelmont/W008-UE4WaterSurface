@@ -6,7 +6,7 @@
 #include "Engine/Engine.h"
 #include "ShaderTest.h"
 #include "SceneInterface.h"
-
+#include "UnrealMathUtility.h"
 // Sets default values
 AWaterSurfaceActor::AWaterSurfaceActor()
 {
@@ -19,6 +19,11 @@ AWaterSurfaceActor::AWaterSurfaceActor()
 void AWaterSurfaceActor::BeginPlay()
 {
 	Super::BeginPlay();
+	for (int i = 0; i<100; i++)
+	{
+		PList.Add(FVector4(FMath::FRandRange(-1.0, 1.0), FMath::FRandRange(-1.0, 1.0), 0.0, 1.0));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Particle Init Done"));
 	
 }
 
@@ -43,9 +48,9 @@ void AWaterSurfaceActor::Draw(UTextureRenderTarget2D* OutputRT, FLinearColor Sim
 	ERHIFeatureLevel::Type FeatureLevel = World->Scene->GetFeatureLevel();
 	FName TextureRenderTargetName = OutputRT->GetFName();
 	ENQUEUE_RENDER_COMMAND(CaptureCommand)(
-		[TextureRenderTargetResource, FeatureLevel, SimpleColor, TextureRenderTargetName](FRHICommandListImmediate& RHICmdList)
+		[this,TextureRenderTargetResource, FeatureLevel, SimpleColor, TextureRenderTargetName](FRHICommandListImmediate& RHICmdList)
 		{
-			ShaderTest::Draw_RenderThread(RHICmdList, TextureRenderTargetResource, FeatureLevel, TextureRenderTargetName, SimpleColor);
+			ShaderTest::Draw_RenderThread(RHICmdList, TextureRenderTargetResource, FeatureLevel, TextureRenderTargetName, PList ,SimpleColor);
 		}
 	);
 }

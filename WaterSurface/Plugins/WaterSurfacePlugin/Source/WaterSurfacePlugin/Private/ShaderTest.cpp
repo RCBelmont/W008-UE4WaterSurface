@@ -1,7 +1,6 @@
-#include "ShaderTest.h"
+﻿#include "ShaderTest.h"
 #include "RHIResources.h"
 #include "RHIStaticStates.h"
-#include "Particles/Location/ParticleModuleLocationSkelVertSurface.h"
 #include "PixelShaderUtils.h"
 
 class FTestShader : public FGlobalShader
@@ -33,6 +32,8 @@ public:
 	// 	FGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
 	// 	OutEnvironment.SetDefine(TEXT("TEST_MICRO"), 1);
 	// }
+	//
+	// 
 	void SetParameters(
 		FRHICommandListImmediate& RHICmdList,
 		const FLinearColor& MyColor
@@ -47,13 +48,14 @@ public:
 		Ar << SimpleCol;
 		return bShaderHasOutdatedParameters;
 	}
+
 private:
 	FShaderParameter SimpleCol;
 };
 
 class FMyTestVS : public FTestShader
 {
-	DECLARE_EXPORTED_SHADER_TYPE(FMyTestVS, Global, /*MYMODULE_API*/);
+DECLARE_EXPORTED_SHADER_TYPE(FMyTestVS, Global, /*MYMODULE_API*/);
 
 	FMyTestVS()
 	{
@@ -67,7 +69,7 @@ class FMyTestVS : public FTestShader
 
 class FMyTestPS : public FTestShader
 {
-	DECLARE_EXPORTED_SHADER_TYPE(FMyTestPS, Global, /*MYMODULE_API*/);
+DECLARE_EXPORTED_SHADER_TYPE(FMyTestPS, Global, /*MYMODULE_API*/);
 
 	FMyTestPS()
 	{
@@ -79,57 +81,62 @@ class FMyTestPS : public FTestShader
 	}
 };
 
+
+TGlobalResource<FMyVertexDeclaration> VertexDec;
 IMPLEMENT_SHADER_TYPE(, FMyTestVS, TEXT("/Plugin/WaterSurfacePlugin/TestShader.usf"), TEXT("MainVS"), SF_Vertex)
 IMPLEMENT_SHADER_TYPE(, FMyTestPS, TEXT("/Plugin/WaterSurfacePlugin/TestShader.usf"), TEXT("MainPS"), SF_Pixel)
 
 
 void ShaderTest::Draw_RenderThread(
-	FRHICommandListImmediate& RHICmdList, 
+	FRHICommandListImmediate& RHICmdList,
 	FTextureRenderTargetResource* OutputRenderTargetResource,
 	ERHIFeatureLevel::Type FeatureLevel,
 	FName TextureRenderTargetName,
+	TArray<FVector4> ParticleList,
 	FLinearColor MyColor)
 {
+	//GFilterVertexDeclaration.VertexDeclarationRHI
 	check(IsInRenderingThread());
 	FRHITexture2D* RenderTargetTexture = OutputRenderTargetResource->GetRenderTargetTexture();
 	RHICmdList.TransitionResource(EResourceTransitionAccess::EWritable, RenderTargetTexture);
-	FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store, OutputRenderTargetResource->TextureRHI);
+	FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store,
+	                          OutputRenderTargetResource->TextureRHI);
 	RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawTestShader"));
 	{
 		//Get Shader
 		TShaderMap<FGlobalShaderType>* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
 		TShaderMapRef<FMyTestVS> VertexShader(GlobalShaderMap);
 		TShaderMapRef<FMyTestPS> PixelShader(GlobalShaderMap);
-		// RHICmdList.SetViewport(
-		// 	0, 0, 0.f,
-		// 	OutputRenderTargetResource->GetSizeX(), OutputRenderTargetResource->GetSizeY(), 1.f);
 		//Set Graphic PipelineState
 		FGraphicsPipelineStateInitializer GraphicsPSOInit;
 		RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
 		GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
 		GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
 		GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
-		GraphicsPSOInit.PrimitiveType = PT_TriangleList;
-		
-		GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GetVertexDeclarationFVector4();//GFilterVertexDeclaration.VertexDeclarationRHI;// GetVertexDeclarationFVector4();
+		//GraphicsPSOInit.PrimitiveType = PT_TriangleList;
+		GraphicsPSOInit.PrimitiveType = PT_PointList;
+
+		GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = VertexDec.VertexDeclarationRHI;
+		//GetVertexDeclarationFVector4();//GFilterVertexDeclaration.VertexDeclarationRHI;// GetVertexDeclarationFVector4();
 		GraphicsPSOInit.BoundShaderState.VertexShaderRHI = GETSAFERHISHADER_VERTEX(*VertexShader);
 		GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
 		SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
-		// RHICmdList.SetViewport(
-		// 	0, 0, 0.f,
-		// 	OutputRenderTargetResource->GetSizeX(), OutputRenderTargetResource->GetSizeY(), 1.f);
-		
+		FMyRenderResources RS;
+		RS.SetVertexPos(ParticleList);
+		TArray<uint16> IndexList;
+		for (int i = 0; i < ParticleList.Num(); i++)
+		{
+			IndexList.Add(i);
+		}
+		RS.SetIndex(IndexList, IndexList.Num());
+
 		PixelShader->SetParameters(RHICmdList, MyColor);
 		FVertexBufferRHIRef VertexBufferRHI;
-		
-		//VertexBufferRHI
-		RHICmdList.DrawPrimitive(0, 1000, 1);
-		//FPixelShaderUtils::DrawFullscreenQuad(RHICmdList, 1);
+		RS.RHIDraw(RHICmdList, RS.GetVertexBuffer(), RS.GetIndexBuffer(), RS, 1);
 	}
 	RHICmdList.EndRenderPass();
-	
-	
-	
+
+
 	//RHICmdList.CopyToResolveTarget(RenderTargetTexture, OutputRenderTargetResource->TextureRHI, FResolveParams());
 }
