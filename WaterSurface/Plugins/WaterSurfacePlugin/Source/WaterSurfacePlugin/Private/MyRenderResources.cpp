@@ -3,15 +3,29 @@
 void FMyRenderResources::SetVertexPos(TArray<FVector4> PosList)
 {
 	Vertices.Empty();
-	const int PostLength = PosList.Num();
-	if (PostLength <= 0)
+	const int PosLength = PosList.Num();
+	if (PosLength <= 0)
 	{
 		return;
 	}
-	Vertices.SetNumUninitialized(PostLength);
-	for (int i = 0; i < PostLength; i++)
+	Vertices.SetNumUninitialized(PosLength);
+	for (int i = 0; i < PosLength; i++)
 	{
 		Vertices[i].Position = PosList[i];
+	}
+}
+
+void FMyRenderResources::SetVertexVelocity(TArray<FLinearColor> VList)
+{
+	Vertices.Empty();
+	const int PosLength = VList.Num();
+	if (PosLength <= 0)
+	{
+		return;
+	}
+	for (int i = 0; i < PosLength; i++)
+	{
+		Vertices[i].Velocity = VList[i];
 	}
 }
 

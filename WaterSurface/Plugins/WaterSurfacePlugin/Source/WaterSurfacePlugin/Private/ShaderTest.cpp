@@ -93,6 +93,7 @@ void ShaderTest::Draw_RenderThread(
 	ERHIFeatureLevel::Type FeatureLevel,
 	FName TextureRenderTargetName,
 	TArray<FVector4> ParticleList,
+	TArray<FLinearColor>VelocityList,
 	FLinearColor MyColor)
 {
 	//GFilterVertexDeclaration.VertexDeclarationRHI

@@ -29,4 +29,5 @@ public:
 
 private:
 	TArray<FVector4> PList;
+	TArray<FLinearColor> VelocityList;
 };

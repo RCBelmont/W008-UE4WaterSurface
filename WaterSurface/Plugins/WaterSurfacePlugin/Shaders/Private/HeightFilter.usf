@@ -38,13 +38,26 @@ float3 GetFilter(float p){
 }
 
 float3 FilterH(float2 UV, float offset, float fstep){
-	float3 base = ParticleTex.Sample(ParticleTexSampler, UV.xy + float2(offset, 0)).rgb;
+	float2 NUV = UV.xy + float2(0, offset);
+		float3 base;
+	if (NUV.x >= 1 || NUV.x <= 0 || NUV.y >= 1 || NUV.y <= 0 ){
+ 		base = (float3)0;
+	} else {
+		base = ParticleTex.Sample(ParticleTexSampler, UV.xy + float2(offset, 0)).rgb;
+	}
 	float3 f = GetFilter(fstep);
-	return f * base;
+	return float3(f.x * base.r, f.y * base.g, f.z * base.b);
 }
 
 float3 FilterV(float2 UV, float offset, float fstep){
-	float3 base = ParticleTex.Sample(ParticleTexSampler, UV.xy + float2(0, offset)).rgb;
+	float2 NUV = UV.xy + float2(0, offset);
+	float3 base;
+	if (NUV.x >= 1 || NUV.x <= 0 || NUV.y >= 1 || NUV.y <= 0 ){
+ 		base = (float3)0;
+	} else {
+		base = ParticleTex.Sample(ParticleTexSampler, UV.xy + float2(0, offset)).rgb;
+	}
+	
 	float3 f = GetFilter(fstep);
 	return float3(f.x * base.r, f.z * base.g, f.y * base.b);
 }
@@ -53,16 +66,16 @@ float4 MainPS(V2P IN):SV_Target0
 {
     float4 centerColor = float4(ParticleTex.Sample(ParticleTexSampler, IN.UV.xy).rgb, 1.0f); 
 	float offsetUnit = 1.0 / 256;	
-	int ParticleR = 3;
 	float3 ret = float3(0,0,0);
-		float R = 10.0;
+	float R = 25.0;
 	ret += FilterH(IN.UV, 0 * offsetUnit, 0);
 	for(int i = 1; i <= R ; i++){
 		ret += FilterH(IN.UV, i * offsetUnit, i/(float)R);
-		ret += FilterH(IN.UV, -i * offsetUnit, i/(float)R);
+		ret += FilterH(IN.UV, -i * offsetUnit, -i/(float)R);
 		
 	}
 	//ret += ParticleTex.Sample(ParticleTexSampler, IN.UV.xy + float2(1 * offsetUnit, 0)).rgb;
+	//return float4(centerColor.rgb, 1);
 	return float4(ret, 1);
 }
 
@@ -70,15 +83,15 @@ float4 MainPSV(V2P IN):SV_Target0
 {
     float4 centerColor = float4(ParticleTex.Sample(ParticleTexSampler, IN.UV.xy).rgb, 1.0f); 
 	float offsetUnit = 1.0 / 256;	
-	int ParticleR = 3;
-	float R = 10.0;
+	float R = 25.0;
 	float3 ret = float3(0,0,0);
 	ret += FilterV(IN.UV, 0 * offsetUnit, 0);
 	for(int i = 1; i <= R ; i++){
 		ret += FilterV(IN.UV, i * offsetUnit, i/(float)R);
-		ret += FilterV(IN.UV, -i * offsetUnit, i/(float)R);
+		ret += FilterV(IN.UV, -i * offsetUnit, -i/(float)R);
 		
 	}
 	//ret += ParticleTex.Sample(ParticleTexSampler, IN.UV.xy + float2(1 * offsetUnit, 0)).rgb;
-	return float4(centerColor.rgb, 1);
+	//return float4(centerColor.rgb, 1);
+	return float4(ret, 1);
 }

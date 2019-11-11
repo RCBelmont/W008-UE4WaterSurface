@@ -20,5 +20,6 @@ public:
 		ERHIFeatureLevel::Type FeatureLevel,
 		FName TextureRenderTargetName,
 		TArray<FVector4> ParticleList,
+		TArray<FLinearColor> Velocity,
 		FLinearColor MyColor);
 };
