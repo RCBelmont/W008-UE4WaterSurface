@@ -1,0 +1,9 @@
+#include "/Engine/Private/Common.ush"
+
+
+RWTexture2D<float4> RWOutTexture;
+
+[numthreads(16,16,1)]
+void MainCS(uint2 tid: SV_DispatchThreadID){
+    RWOutTexture[tid] = float4(1,0,1,1);
+}

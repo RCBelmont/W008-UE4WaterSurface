@@ -18,7 +18,7 @@
 		{
 			"Name": "WaterPreprocess",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostConfigInit"
 		}
 	]
 }
