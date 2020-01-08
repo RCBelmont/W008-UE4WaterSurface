@@ -1,9 +1,65 @@
 #include "/Engine/Private/Common.ush"
 
+struct TestStruct{
+    float3 TestPos;
+    float3 TestPos1;
+};
+
+RWStructuredBuffer<TestStruct> RWTestStructuredBuffer;
 
 RWTexture2D<float4> RWOutTexture;
+float2 TimeTick;
 
 [numthreads(16,16,1)]
 void MainCS(uint2 tid: SV_DispatchThreadID){
-    RWOutTexture[tid] = float4(1,0,1,1);
+    uint2 dim;
+    RWOutTexture.GetDimensions(dim.x, dim.y);
+    float2 UV = (float2)tid / dim;
+    float size  = 1000000.0;
+    
+    float2 WorldPos = size * UV - size / 2;
+
+
+    float wave = 0;
+    float2 waveX = 0;
+    float2 k[4] = 
+    {   
+        float2(0.0008, -0.008),
+        float2(0.0005, 0.0004),
+        float2(0.0003,  -0.0004),
+        float2(0.0001,  -0.0001),
+    };
+
+    float A[4] = 
+    {   
+        5,
+        5,
+        10,
+        10
+    };
+
+    float w[4] = 
+    {   
+        2,
+        2.5,
+        1.5,
+        1.5
+    };
+    float alpha = 0;
+    float2 displacementNormalized = 0;
+    for(int i = 0; i<4; i++){
+        float2 k_use = k[i] * 1.2;
+        wave += A[i] * 5 * cos(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
+        waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
+        float2 sssFactor = min(1.0, k_use);
+        displacementNormalized.x += waveX.x * sssFactor.x;
+        displacementNormalized.y += waveX.y * sssFactor.y;
+    }
+
+    //RWOutTexture[tid] = float4(RWTestStructuredBuffer[0].TestPos1, 1);
+    RWOutTexture[tid] = float4(-waveX , wave, pow(length(displacementNormalized), 1)); 
+    RWTestStructuredBuffer[0].TestPos = float3(0,0,1);
+    RWTestStructuredBuffer[0].TestPos1 = float3(1,0,1);
+    RWTestStructuredBuffer[1].TestPos = float3(1,1,1);
+    RWTestStructuredBuffer[1].TestPos1 = float3(1,0,1);
 }

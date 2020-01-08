@@ -40,8 +40,9 @@ public class WaterPreprocess : ModuleRules
 				"SlateCore",
 				"RenderCore",
 				"Projects",
-				"RHI"
-				// ... add private dependencies that you statically link with here ...	
+				"RHI",
+				"Core"
+                // ... add private dependencies that you statically link with here ...	
 			}
 			);
 		
