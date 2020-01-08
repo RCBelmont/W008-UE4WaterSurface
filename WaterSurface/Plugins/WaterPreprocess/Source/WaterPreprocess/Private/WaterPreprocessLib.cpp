@@ -25,23 +25,17 @@ FVector UWaterPreprocessLib::DrawWaterHeightMap(
 		FRHICommandListImmediate& RHICmdList)
 		{
 			FVector HeightSamplePos = Target1->GetTransform().GetLocation();
-			FWaterHeightMapShader::DrawWaterHeightMap_RenderThread(
+			FVector pos = FWaterHeightMapShader::DrawWaterHeightMap_RenderThread(
 				RHICmdList,
 				FeatureLevel,
 				OutRTResource,
 				TimeTick,
 				HeightSamplePos
 			);
-			WaterEvent::GetInstance()->TestFinish.Broadcast();
-			//Target1->SetActorLocation(FVector::ZeroVector);
-			//TestFinish.Broadcast();
+			WaterEvent::GetInstance()->TestFinish.Broadcast(pos);
 		});
 
-	WaterEvent::GetInstance()->TestFinish.AddLambda([]()
-	{
-		UE_LOG(LogTemp, Warning, TEXT("!!!!!!!!!!!"));
-		
-	});
+
 	
 	return RetVector;
 }

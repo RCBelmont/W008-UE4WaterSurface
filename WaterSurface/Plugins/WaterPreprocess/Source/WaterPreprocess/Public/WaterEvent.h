@@ -4,7 +4,7 @@
 class WaterEvent
 {
 public:
-	DECLARE_EVENT(WaterEvent, FOnTestFinish)
+	DECLARE_EVENT_OneParam(WaterEvent, FOnTestFinish, FVector)
 	FOnTestFinish& OnTestFinish() { return TestFinish; }
 	static WaterEvent* GetInstance()
 	{

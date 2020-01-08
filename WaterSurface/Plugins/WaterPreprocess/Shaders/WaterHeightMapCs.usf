@@ -9,6 +9,7 @@ RWStructuredBuffer<TestStruct> RWTestStructuredBuffer;
 
 RWTexture2D<float4> RWOutTexture;
 float2 TimeTick;
+float3 SamPos;
 
 [numthreads(16,16,1)]
 void MainCS(uint2 tid: SV_DispatchThreadID){
@@ -55,11 +56,19 @@ void MainCS(uint2 tid: SV_DispatchThreadID){
         displacementNormalized.x += waveX.x * sssFactor.x;
         displacementNormalized.y += waveX.y * sssFactor.y;
     }
-
-    //RWOutTexture[tid] = float4(RWTestStructuredBuffer[0].TestPos1, 1);
     RWOutTexture[tid] = float4(-waveX , wave, pow(length(displacementNormalized), 1)); 
-    RWTestStructuredBuffer[0].TestPos = float3(0,0,1);
-    RWTestStructuredBuffer[0].TestPos1 = float3(1,0,1);
-    RWTestStructuredBuffer[1].TestPos = float3(1,1,1);
-    RWTestStructuredBuffer[1].TestPos1 = float3(1,0,1);
+    wave = 0;
+    waveX = 0;
+    for(i = 0; i<4; i++){
+        float2 k_use = k[i] * 1.2;
+      
+        wave += A[i] * 5 * cos(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
+        waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
+        
+    }
+    RWTestStructuredBuffer[tid.x * 16 + tid.y].TestPos1 = float3(-waveX.x, -waveX.y, wave);
+    //RWTestStructuredBuffer[0].TestPos1 = float3(1,0,20);
+    //RWTestStructuredBuffer[0].TestPos1 = float3(-waveX.x, -waveX.y, wave);
+   
+   
 }

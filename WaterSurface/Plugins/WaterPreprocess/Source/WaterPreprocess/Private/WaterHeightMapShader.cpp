@@ -10,6 +10,7 @@ private:
 	FRWShaderParameter OutTexture;
 	FRWShaderParameter TestStructuredBufferSurface;
 	FShaderParameter Time;
+	FShaderParameter SamPos;
 public:
 	FWaterHeightMapCS()
 	{
@@ -30,23 +31,25 @@ public:
 	{
 		OutTexture.Bind(Initializer.ParameterMap, TEXT("OutTexture"));
 		Time.Bind(Initializer.ParameterMap, TEXT("TimeTick"));
+		SamPos.Bind(Initializer.ParameterMap, TEXT("SamPos"));
 		TestStructuredBufferSurface.Bind(Initializer.ParameterMap, TEXT("TestStructuredBuffer"));
 	}
 
 	virtual bool Serialize(FArchive& Ar) override
 	{
 		bool bShaderHasOutdatedParams = FGlobalShader::Serialize(Ar);
-		Ar << OutTexture << Time << TestStructuredBufferSurface;
+		Ar << OutTexture << Time << TestStructuredBufferSurface<< SamPos;
 		return bShaderHasOutdatedParams;
 	}
 
 	void SetParams(FRHICommandListImmediate& RHICmdList, FUnorderedAccessViewRHIRef UAV, float TimeTick,
-	               FUnorderedAccessViewRHIRef BuffUAV)
+	               FUnorderedAccessViewRHIRef BuffUAV, FVector Pos)
 	{
 		FRHIComputeShader* ComputeShaderRHI = GetComputeShader();
 		RHICmdList.SetUAVParameter(ComputeShaderRHI, OutTexture.GetUAVIndex(), UAV);
 		RHICmdList.SetUAVParameter(ComputeShaderRHI, TestStructuredBufferSurface.GetUAVIndex(), BuffUAV);
 		SetShaderValue(RHICmdList, GetComputeShader(), Time, TimeTick);
+		SetShaderValue(RHICmdList, GetComputeShader(), SamPos, Pos);
 	}
 
 	void UnbindBuffers(FRHICommandList& RHICmdList)
@@ -102,7 +105,7 @@ FVector FWaterHeightMapShader::DrawWaterHeightMap_RenderThread(
 	                                              BUF_UnorderedAccess | BUF_ShaderResource, TestBufferCreateInfo);
 	TestStructureBuffUAV = RHICreateUnorderedAccessView(TestStructureBuff, true, false);
 
-	ComputeShader->SetParams(RHICmdList, TextureUAV, TimeTick, TestStructureBuffUAV);
+	ComputeShader->SetParams(RHICmdList, TextureUAV, TimeTick, TestStructureBuffUAV, HeightSamplePos);
 
 
 	DispatchComputeShader(RHICmdList, *ComputeShader, OutputSurface->GetSizeX() / 16, OutputSurface->GetSizeY() / 16,
