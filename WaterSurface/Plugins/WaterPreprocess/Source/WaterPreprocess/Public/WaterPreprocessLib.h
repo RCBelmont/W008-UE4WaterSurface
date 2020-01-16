@@ -23,7 +23,7 @@ public:
 			AActor* Target,
 			UTextureRenderTarget2D* HeightMapRT,
 			float TimeTick,
-			AActor* Target1
+			UTexture2D* AmpNoise
 		);
 private:
 	 FOnTestFinish TestFinish;

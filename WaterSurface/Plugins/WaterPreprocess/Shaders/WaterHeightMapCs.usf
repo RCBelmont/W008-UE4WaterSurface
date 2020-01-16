@@ -1,74 +1,83 @@
 #include "/Engine/Private/Common.ush"
-
-struct TestStruct{
-    float3 TestPos;
-    float3 TestPos1;
-};
-
-RWStructuredBuffer<TestStruct> RWTestStructuredBuffer;
-
+#include "WaterPreprocess.ush" 
 RWTexture2D<float4> RWOutTexture;
+Texture2D<float4> AmpNoise;
+SamplerState samplerAmpNoise;
 float2 TimeTick;
 float3 SamPos;
+
+
+float Motion4WayChaos(float2 texCoord){
+    float tieme = TimeTick.x * 0;
+    float2 uv1 = texCoord + float2(0.418, 0.355) + tieme * float2(0.1, 0.1);
+    float2 uv2 = texCoord + float2(0.865, 0.148) + tieme * float2(-0.1, -0.1);
+    float2 uv3 = texCoord + float2(0.651, 0.752) + tieme * float2(0.1, -0.1);
+    float2 uv4 = texCoord +  tieme * float2(-0.1, 0.1);
+    float AmpNoiseValue1 = AmpNoise.SampleLevel(samplerAmpNoise, uv1, 0).r;
+    float AmpNoiseValue2 = AmpNoise.SampleLevel(samplerAmpNoise, uv2, 0).r;
+    float AmpNoiseValue3 = AmpNoise.SampleLevel(samplerAmpNoise, uv3, 0).r;
+    float AmpNoiseValue4 = AmpNoise.SampleLevel(samplerAmpNoise, uv4, 0).r;
+    return (AmpNoiseValue1);//+ AmpNoiseValue2 + AmpNoiseValue3 + AmpNoiseValue4) * 0.25;
+}
 
 [numthreads(16,16,1)]
 void MainCS(uint2 tid: SV_DispatchThreadID){
     uint2 dim;
     RWOutTexture.GetDimensions(dim.x, dim.y);
     float2 UV = (float2)tid / dim;
-    float size  = 1000000.0;
+    float size  = 10000.0;
     
-    float2 WorldPos = size * UV - size / 2;
+    float2 WorldPos = size * (UV - 0.5);
 
+    float Noise = Motion4WayChaos(UV * 1);
 
-    float wave = 0;
-    float2 waveX = 0;
-    float2 k[4] = 
-    {   
-        float2(0.0008, -0.008),
-        float2(0.0005, 0.0004),
-        float2(0.0003,  -0.0004),
-        float2(0.0001,  -0.0001),
-    };
+    RWOutTexture[tid] = GerstnerWave(TimeTick.x, WorldPos, Noise);
+    //RWOutTexture[tid] = Noise;
+    //RWOutTexture[tid] = (float4);
 
-    float A[4] = 
-    {   
-        5,
-        5,
-        10,
-        10
-    };
+    // float wave = 0;
+    // float2 waveX = 0;
+    // float2 k[4] = 
+    // {   
+    //     float2(0.0001, -0.00008),
+    //     float2(0.0005, 0.0004),
+    //     float2(0.0003,  -0.0004),
+    //     float2(0.0001,  -0.0001),
+    // };
 
-    float w[4] = 
-    {   
-        2,
-        2.5,
-        1.5,
-        1.5
-    };
-    float alpha = 0;
-    float2 displacementNormalized = 0;
-    for(int i = 0; i<4; i++){
-        float2 k_use = k[i] * 1.2;
-        wave += A[i] * 5 * cos(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
-        waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
-        float2 sssFactor = min(1.0, k_use);
-        displacementNormalized.x += waveX.x * sssFactor.x;
-        displacementNormalized.y += waveX.y * sssFactor.y;
-    }
-    RWOutTexture[tid] = float4(-waveX , wave, pow(length(displacementNormalized), 1)); 
-    wave = 0;
-    waveX = 0;
-    for(i = 0; i<4; i++){
-        float2 k_use = k[i] * 1.2;
+    // float A[4] = 
+    // {   
+    //     20,
+    //     0,
+    //     0,
+    //     0
+    // };
+
+    // float w[4] = 
+    // {   
+    //     2,
+    //     2.5,
+    //     1.5,
+    //     1.5
+    // };
+    // float alpha = 0;
+    // float2 displacementNormalized = 0;
+    // for(int i = 0; i<4; i++){
+    //     float2 k_use = k[i] * 1.2;
+    //     wave += A[i] * 5 * cos(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
+    //     waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, WorldPos.xy) - w[i] * TimeTick.x);
+    //     float2 sssFactor = min(1.0, k_use);
+    //     displacementNormalized.x += waveX.x * sssFactor.x;
+    //     displacementNormalized.y += waveX.y * sssFactor.y;
+    // }
+    // RWOutTexture[tid] = float4(-waveX , wave, pow(length(displacementNormalized), 1)); 
+    // wave = 0;
+    // waveX = 0;
+    // for(i = 0; i<4; i++){
+    //     float2 k_use = k[i] * 1.2;
       
-        wave += A[i] * 5 * cos(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
-        waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
+    //     wave += A[i] * 5 * cos(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
+    //     waveX += normalize(k[i]) * A[i] * 5 * sin(dot(k_use, SamPos.xy) - w[i] * TimeTick.x);
         
-    }
-    RWTestStructuredBuffer[tid.x * 16 + tid.y].TestPos1 = float3(-waveX.x, -waveX.y, wave);
-    //RWTestStructuredBuffer[0].TestPos1 = float3(1,0,20);
-    //RWTestStructuredBuffer[0].TestPos1 = float3(-waveX.x, -waveX.y, wave);
-   
-   
+    // }
 }

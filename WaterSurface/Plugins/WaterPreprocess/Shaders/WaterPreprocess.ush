@@ -1,0 +1,82 @@
+
+#define D2R 3.14/180.0
+
+
+
+float4 MyDotProduct(float4 X, float4 Y, float2 target){
+    float2 d1 = float2(X.r, Y.r);
+    float2 d2 = float2(X.g, Y.g);
+    float2 d3 = float2(X.b, Y.b);
+    float2 d4 = float2(X.a, Y.a);
+    return float4(dot(d1, target), dot(d2, target), dot(d3, target), dot(d4, target));
+}
+
+float4 GerstnerWave(float Time, float2 WorldPos, float AmpNoise){
+    
+    float w[4] = {
+        2,
+        3,
+        4,
+        3
+    };
+
+    float k[4] = {
+        0.06,
+        0.009,
+        0.01,
+        0.007
+    };
+    float angle[4] = {
+        120, 
+        150,
+        100,
+        120
+    };
+
+     float a[4] = {
+        0.5, 
+        0.4,
+        0.6,
+        1.3
+    };
+    float waveV = 0;
+    float2 waveH = (float2)0;
+    float2 displacementNormalized = (float2)0;
+    for (int i = 1; i<4; i++){
+        for(int j = 0 ; j <4 ;j++){
+            float angle1 = angle[j] + 30 * i;
+            float2 dir = float2(cos(angle1* D2R), sin(angle1 * D2R));
+            waveV +=  a[i] * 0.25 * cos(dot(k[i].x * dir, WorldPos) - w[j] * Time);
+            waveH +=  a[i] * dir *  0.25 * sin(dot(k[i].x * dir, WorldPos) - w[j] * Time);
+            float2 sssFactor = min(1.0, k[i]  * dir);
+            displacementNormalized.x += waveH.x * sssFactor.x;
+            displacementNormalized.y += waveH.y * sssFactor.y;
+        }
+    }
+
+
+    return  float4(-waveH, waveV, length(displacementNormalized) * 10);
+//     float4 spaceX = cos(angle * D2R);
+//     float4 spaceY = sin(angle * D2R);
+
+//     float4 dotR = MyDotProduct(k * spaceX, k * spaceY, WorldPos);
+
+
+//     float4 waveV = a * cos(dotR - w * Time);
+//     float4 waveHX = spaceX * a * sin(dotR - w * Time);
+//     float4 waveHY = spaceY * a * sin(dotR - w * Time);
+//     float4 SSSFX = min(1.0, k * spaceX) * waveHX;
+//     float4 SSSFY = min(1.0, k * spaceY) * waveHY;
+//     float SSSX = (SSSFX.x  + SSSFX.y  + SSSFX.z  + SSSFX.w) ;
+//     float SSSY = (SSSFY.x  + SSSFY.y  + SSSFY.z  + SSSFY.w);
+   
+//    float2 waveH = float2(waveHX.x + waveHX.y + waveHX.z + waveHX.w, waveHY.x + waveHY.y + waveHY.z + waveHY.w);
+//    float2 SSS = float2(SSSX, SSSY);
+//    float WaveHeight = waveV.r + waveV.g + waveV.b + waveV.a;
+//    //return float4(a.xxxx);
+//     //return float4(0,0,WaveHeight, 1);
+//    return float4(-waveH, WaveHeight, length(SSS)/10);
+
+  
+}
+

@@ -10,12 +10,12 @@ struct TestStruct
 class FWaterHeightMapShader
 {
 public:
-	static FVector DrawWaterHeightMap_RenderThread(
+	static void DrawWaterHeightMap_RenderThread(
 		FRHICommandListImmediate& RHICmdList,
 		ERHIFeatureLevel::Type FeatureLevel,
 		FTextureRenderTargetResource* OutputSurface,
 		float TimeTick,
-		FVector HeightSamplePos
+		FTextureRHIRef AmpNoise
 	);
 		
 };

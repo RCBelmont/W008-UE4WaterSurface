@@ -2,7 +2,7 @@
 
 
 #include "WaterFlotage.h"
-#include "WaterEvent.h"
+#include "WaterFlotageMgr.h"
 #include "Engine/Engine.h"
 
 // Sets default values
@@ -17,23 +17,19 @@ void AWaterFlotage::BeginPlay()
 {
 	Super::BeginPlay();
 	InitPos = this->GetActorLocation();
-	TestEventHandle = WaterEvent::GetInstance()->OnTestFinish().AddLambda([this](FVector pos)
+	FWaterFlotageMgr::GetInstance()->RegisterFlotageActor(this);
+	/*TestEventHandle = FWaterFlotageMgr::GetInstance()->OnWaterFlotageHeightCalcDone().AddLambda([this]()
 	{
-	
-			this->Offset = pos;
-
+		UE_LOG(LogTemp, Warning, TEXT(">>>>"));
 		
-			
-			
-			
-	});
+	});*/
 }
 
 void AWaterFlotage::BeginDestroy()
 {
 	Super::BeginDestroy();
 	
-	WaterEvent::GetInstance()->OnTestFinish().Remove(TestEventHandle);
+	//FWaterFlotageMgr::GetInstance()->OnWaterFlotageHeightCalcDone().Remove(TestEventHandle);
 }
 
 // Called every frame
@@ -41,10 +37,5 @@ void AWaterFlotage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	SetActorLocation(InitPos + Offset * 0.8);
-}
-
-void AWaterFlotage::Test()
-{
-	
+	//SetActorLocation(InitPos + Offset * 0.8);
 }

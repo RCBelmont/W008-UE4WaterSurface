@@ -5,34 +5,35 @@
 #include "Engine/World.h"
 #include "SceneInterface.h"
 #include "WaterHeightMapShader.h"
-#include "WaterEvent.h"
+#include "Engine/Texture2D.h"
 
 FVector UWaterPreprocessLib::DrawWaterHeightMap(
 	AActor* Target,
 	UTextureRenderTarget2D* HeightMapRT,
 	float TimeTick,
-	AActor* Target1
+	UTexture2D* AmpNoise
 )
 {
 	FVector RetVector;
-
+	
 	UWorld* World = Target->GetWorld();
 	ERHIFeatureLevel::Type FeatureLevel = World->Scene->GetFeatureLevel();
 	FTextureRenderTargetResource* OutRTResource = HeightMapRT->GameThread_GetRenderTargetResource();
 
 	ENQUEUE_RENDER_COMMAND(CaptureCommand)(
-		[OutRTResource, FeatureLevel, TimeTick, Target1, RetVector](
+		[OutRTResource, FeatureLevel, TimeTick, RetVector, AmpNoise](
 		FRHICommandListImmediate& RHICmdList)
 		{
-			FVector HeightSamplePos = Target1->GetTransform().GetLocation();
-			FVector pos = FWaterHeightMapShader::DrawWaterHeightMap_RenderThread(
+			
+			
+			FWaterHeightMapShader::DrawWaterHeightMap_RenderThread(
 				RHICmdList,
 				FeatureLevel,
 				OutRTResource,
 				TimeTick,
-				HeightSamplePos
+				AmpNoise->Resource->TextureRHI
 			);
-			WaterEvent::GetInstance()->TestFinish.Broadcast(pos);
+			//WaterEvent::GetInstance()->TestFinish.Broadcast(pos);
 		});
 
 
